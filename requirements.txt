@@ -1,0 +1,30 @@
+# Core Framework
+pydantic-ai[openai]>=0.0.13
+pydantic>=2.5.0
+
+# Data Collection
+praw>=7.7.1       # Reddit API
+requests>=2.31.0
+pandas
+
+# Vector Database & Embeddings
+faiss-cpu>=1.7.4
+sentence-transformers>=2.2.2
+numpy>=1.24.0
+
+# Text Processing
+spacy>=3.7.0
+nltk>=3.8.1
+textstat>=0.7.3
+
+# Configuration & Utils
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+rich>=13.0.0       # For pretty printing
+watchdog>=3.0.0    # For file monitoring
+
+# Date/Time handling
+python-dateutil>=2.8.2
+
+# Optional: Local LLM support
+# ollama>=0.1.7     # Uncomment if using local Gemma 2

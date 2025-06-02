@@ -1,0 +1,92 @@
+# Personal Data Protection - NEVER commit these
+data/
+vector_store/
+embeddings/
+persona_profile.json
+*.db
+*.db-wal
+*.db-shm
+
+# Environment and Secrets
+.env
+.env.local
+.env.*.local
+config/secrets.yaml
+config/api_keys.yaml
+
+# Personal Configuration (keep templates, not actual data)
+config/preferences.yaml  # Remove this line if you want to commit your preferences template
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Model files (if downloaded locally)
+models/
+*.bin
+*.safetensors
+
+# Backup files
+*.bak
+*.backup
+
+# Test outputs
+test_outputs/
+debug_outputs/
