@@ -12,7 +12,7 @@ import yaml
 import numpy as np
 import faiss
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple # Optional is already here
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -23,6 +23,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from sentence_transformers import SentenceTransformer
 from data_ingest.imessage_reader import iMessageCollector, iMessage
+from config.settings import settings
 
 @dataclass
 class PersonaVector:
@@ -41,6 +42,7 @@ class VectorPersonaBuilder:
     def __init__(self, embedding_model: str = "all-MiniLM-L6-v2"):
         self.logger = logging.getLogger(__name__)
         self.embedding_model = SentenceTransformer(embedding_model)
+        self.default_preferences_path = settings.PREFERENCES_YAML_PATH
         self.vector_dimension = self.embedding_model.get_sentence_embedding_dimension()
         
         # FAISS indices for different vector types
@@ -54,14 +56,17 @@ class VectorPersonaBuilder:
         
         self.logger.info(f"Initialized with {embedding_model}, dimension: {self.vector_dimension}")
     
-    def build_persona_vectors(self, messages: List[iMessage], preferences_path: str = "config/preferences.yaml") -> Dict:
+    def build_persona_vectors(self, messages: List[iMessage], preferences_path: Optional[str] = None) -> Dict:
         """
         Main function: Build vector-based persona from iMessages + preferences
         """
         self.logger.info("🧬 Building Vector-Based Persona...")
         
+        # Determine preferences path
+        actual_preferences_path = preferences_path if preferences_path is not None else self.default_preferences_path
+
         # Load preferences
-        preferences = self._load_preferences(preferences_path)
+        preferences = self._load_preferences(actual_preferences_path)
         
         # Filter to your messages
         your_messages = [m for m in messages if m.is_from_me and m.text]
