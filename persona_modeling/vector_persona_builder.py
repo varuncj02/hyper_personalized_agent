@@ -492,7 +492,7 @@ def main():
     
     try:
         print("📱 Collecting iMessage history...")
-        messages = collector.collect_messages(limit=5000)  # Reasonable limit for MVP
+        messages = collector.collect_messages(limit=30000)  # Reasonable limit for MVP
         print(f"✅ Collected {len(messages)} messages")
         
         # Build vector persona
