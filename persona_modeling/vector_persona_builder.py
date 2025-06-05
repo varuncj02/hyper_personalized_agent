@@ -12,7 +12,7 @@ import yaml
 import numpy as np
 import faiss
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple # Optional is already here
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -23,10 +23,17 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from sentence_transformers import SentenceTransformer
 from data_ingest.imessage_reader import iMessageCollector, iMessage
+from config.settings import settings
 
 @dataclass
 class PersonaVector:
-    """Data class for storing vectors with metadata"""
+    """Data class for storing vectors with metadata.
+
+    The 'metadata' field can contain various pieces of information
+    about the vector's source, including person-specific details like
+    'source_chat_id', 'message_author_type', 'message_author_id',
+    and 'message_author_name' for vectors derived from messages.
+    """
     vector_id: str
     text_content: str
     vector_type: str  # 'message', 'preference', 'context', 'relationship'
@@ -41,6 +48,7 @@ class VectorPersonaBuilder:
     def __init__(self, embedding_model: str = "all-MiniLM-L6-v2"):
         self.logger = logging.getLogger(__name__)
         self.embedding_model = SentenceTransformer(embedding_model)
+        self.default_preferences_path = settings.PREFERENCES_YAML_PATH
         self.vector_dimension = self.embedding_model.get_sentence_embedding_dimension()
         
         # FAISS indices for different vector types
@@ -54,14 +62,17 @@ class VectorPersonaBuilder:
         
         self.logger.info(f"Initialized with {embedding_model}, dimension: {self.vector_dimension}")
     
-    def build_persona_vectors(self, messages: List[iMessage], preferences_path: str = "config/preferences.yaml") -> Dict:
+    def build_persona_vectors(self, messages: List[iMessage], preferences_path: Optional[str] = None) -> Dict:
         """
         Main function: Build vector-based persona from iMessages + preferences
         """
         self.logger.info("🧬 Building Vector-Based Persona...")
         
+        # Determine preferences path
+        actual_preferences_path = preferences_path if preferences_path is not None else self.default_preferences_path
+
         # Load preferences
-        preferences = self._load_preferences(preferences_path)
+        preferences = self._load_preferences(actual_preferences_path)
         
         # Filter to your messages
         your_messages = [m for m in messages if m.is_from_me and m.text]
@@ -142,9 +153,19 @@ class VectorPersonaBuilder:
                             "word_count": len(message.text.split()),
                             "timestamp": message.timestamp.isoformat(),
                             "service": message.service,
-                            "contact": message.contact_name or "unknown"
+                            "contact": message.contact_name or "unknown", # This might be redundant if message.is_from_me is true
+                            "source_chat_id": message.chat_id  # ID of the chat thread this message belongs to
                         }
                     )
+                    # Add author information
+                    if message.is_from_me:
+                        vector.metadata["message_author_type"] = "self"      # Indicates the message is from the user running the script
+                        vector.metadata["message_author_id"] = None         # No external ID for self
+                        vector.metadata["message_author_name"] = None       # No external name for self
+                    else:
+                        vector.metadata["message_author_type"] = "external"  # Indicates the message is from another contact
+                        vector.metadata["message_author_id"] = message.contact_id # ID of the contact
+                        vector.metadata["message_author_name"] = message.contact_name or message.contact_id # Name of the contact
                     message_vectors.append(vector)
                     vector_id += 1
         
@@ -281,9 +302,19 @@ class VectorPersonaBuilder:
                         "context_type": context_type,
                         "message_length": len(message.text),
                         "timestamp": message.timestamp.isoformat(),
-                        "contact": message.contact_name or "unknown"
+                        "contact": message.contact_name or "unknown", # This might be redundant if message.is_from_me is true
+                        "source_chat_id": message.chat_id  # ID of the chat thread this message belongs to
                     }
                 )
+                # Add author information
+                if message.is_from_me:
+                    vector.metadata["message_author_type"] = "self"      # Indicates the message is from the user running the script
+                    vector.metadata["message_author_id"] = None         # No external ID for self
+                    vector.metadata["message_author_name"] = None       # No external name for self
+                else:
+                    vector.metadata["message_author_type"] = "external"  # Indicates the message is from another contact
+                    vector.metadata["message_author_id"] = message.contact_id # ID of the contact
+                    vector.metadata["message_author_name"] = message.contact_name or message.contact_id # Name of the contact
                 context_vectors.append(vector)
                 vector_id += 1
         
@@ -349,12 +380,22 @@ class VectorPersonaBuilder:
                     text_content=message.text,
                     vector_type="relationship",
                     metadata={
-                        "contact": contact,
+                        "contact": contact, # This is the contact the message is with, not necessarily the author
                         "total_messages_with_contact": len(messages),
                         "message_length": len(message.text),
-                        "timestamp": message.timestamp.isoformat()
+                        "timestamp": message.timestamp.isoformat(),
+                        "source_chat_id": message.chat_id  # ID of the chat thread this message belongs to
                     }
                 )
+                # Add author information
+                if message.is_from_me:
+                    vector.metadata["message_author_type"] = "self"      # Indicates the message is from the user running the script
+                    vector.metadata["message_author_id"] = None         # No external ID for self
+                    vector.metadata["message_author_name"] = None       # No external name for self
+                else:
+                    vector.metadata["message_author_type"] = "external"  # Indicates the message is from another contact
+                    vector.metadata["message_author_id"] = message.contact_id # ID of the contact (should align with 'contact' variable)
+                    vector.metadata["message_author_name"] = message.contact_name or message.contact_id # Name of the contact
                 relationship_vectors.append(vector)
                 vector_id += 1
         

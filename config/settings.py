@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     # Database paths
     IMESSAGE_DB_PATH: str = os.path.expanduser("~/Library/Messages/chat.db")
     PERSONA_DB_PATH: str = "./data/persona_vectors.faiss"
+    PREFERENCES_YAML_PATH: str = "config/preferences.yaml"
     
     # API Keys (set in .env file)
     REDDIT_CLIENT_ID: Optional[str] = None
